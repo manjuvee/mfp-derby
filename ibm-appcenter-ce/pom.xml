@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ibm.mfp</groupId>
+		<artifactId>ibm-mobilefoundation-containers</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>ibm-appcenter-ce</artifactId>
+	<name>ibm-appcenter-ce</name>
+	<packaging>pom</packaging>
+	<url>http://maven.apache.org</url>
+	<properties>
+		<image.tag>1.0.0</image.tag>
+		<output.directory>${basedir}/target</output.directory>
+		<output.dependency.directory>${output.directory}/mfpf-libs</output.dependency.directory>
+		<mfpappcenter.war.filename>applicationcenter.war</mfpappcenter.war.filename>
+		<mfpappcenterconsole.war.filename>appcenterconsole.war</mfpappcenterconsole.war.filename>
+		<antdeployer.jar.filename>mfp-ant-deployer.jar</antdeployer.jar.filename>
+		<mfp.buildtools.version>Main-SNAPSHOT</mfp.buildtools.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.ibm.mobile</groupId>
+			<artifactId>ApplicationCenterConsole</artifactId>
+			<version>Main-SNAPSHOT</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.mobile</groupId>
+			<artifactId>ApplicationCenterServices</artifactId>
+			<version>Main-SNAPSHOT</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.worklight</groupId>
+			<artifactId>worklight-build-tools</artifactId>
+			<version>${mfp.buildtools.version}</version>
+			<classifier>ant-deployer</classifier>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.ibm.plugin</groupId>
+				<artifactId>imp-maven-license-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy image artifacts</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${output.directory}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}</directory>
+									<excludes>
+										<exclude>pom.xml</exclude>
+										<exclude>target</exclude>
+										<exclude>.classpath</exclude>
+										<exclude>.project</exclude>
+										<exclude>.gitignore</exclude>
+										<exclude>.settings</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy dependencies for image</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>com.ibm.mobile,org.apache.derby</includeGroupIds>
+							<outputDirectory>${output.dependency.directory}</outputDirectory>
+							<stripClassifier>true</stripClassifier>
+							<stripVersion>true</stripVersion>
+							<excludeTransitive>true</excludeTransitive>
+							<overWriteReleases>true</overWriteReleases>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>rename files for image</id>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<phase>compile</phase>
+						<configuration>
+							<target>
+								<move
+									file="${output.dependency.directory}/ApplicationCenterServices.war"
+									tofile="${output.dependency.directory}/${mfpappcenter.war.filename}" />
+								<move
+									file="${output.dependency.directory}/ApplicationCenterConsole.war"
+									tofile="${output.dependency.directory}/${mfpappcenterconsole.war.filename}" />
+							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<id>create derby databases for image</id>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<target>
+								<echo
+									message="using mfp-ant-deployer.jar at ${maven.dependency.com.worklight.worklight-build-tools.ant-deployer.jar.path}" />
+								<taskdef resource="com/ibm/mfp/ant/defaults.properties">
+									<classpath>
+										<!-- Use the derby.jar from Studio because it has a different version 
+											than the one embedded in worklight-ant-deployer.jar. -->
+										<pathelement
+											location="${output.dependency.directory}/derby.jar" />
+										<pathelement
+											location="${maven.dependency.com.worklight.worklight-build-tools.ant-deployer.jar.path}" />
+									</classpath>
+								</taskdef>
+								<delete dir="${project.build.directory}/databases" />
+								<configuredatabase kind="ApplicationCenter">
+									<derby datadir="${project.build.directory}/databases"
+										database="APPCENTER" />
+								</configuredatabase>
+							</target>
+						</configuration>
+					</execution>
+					<execution>
+						<id>create docker manifest</id>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+						<inherited>false</inherited>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>dockerfile-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<repository>ibm-appcenter-ce</repository>
+					<tag>${image.tag}</tag>
+					<contextDirectory>${output.directory}</contextDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

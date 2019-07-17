@@ -1,0 +1,57 @@
+<!-- Licensed Materials - Property of IBM 5725-I43 (C) Copyright IBM Corp.
+  2015, 2015. All Rights Reserved. US Government Users Restricted Rights -
+  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with
+  IBM Corp. -->
+
+<server>
+    <featureManager>
+        <feature>jsp-2.3</feature>
+        <feature>jndi-1.0</feature>
+        <feature>appSecurity-2.0</feature>
+        <feature>servlet-3.1</feature>
+        <feature>mpMetrics-1.0</feature>
+    </featureManager>
+
+<httpEndpoint id="defaultHttpEndpoint" httpPort="${default.http.port}" httpsPort="9443" host="*">
+<tcpOptions soReuseAddr="true"/>
+
+</httpEndpoint>
+
+<basicRegistry>
+ <user name="admin" password="admin"/>
+</basicRegistry>
+    <application id="analytics-service" name="analytics-service" location="analytics.ear" type="ear">
+        <application-bnd>
+            <security-role name="analytics_administrator">
+                <user name="admin"/>
+
+            </security-role>
+
+            <security-role name="analytics_infrastructure">
+            </security-role>
+
+            <security-role name="analytics_support">
+            </security-role>
+
+            <security-role name="analytics_developer">
+            </security-role>
+
+            <security-role name="analytics_business">
+            </security-role>
+
+        </application-bnd>
+
+    </application>
+
+    <administrator-role>
+        <user>admin</user>
+    </administrator-role>
+
+    <jndiEntry jndiName="analytics/shards" value='"1"'/>
+    <jndiEntry jndiName="analyticsconsole/mfp.analytics.url" value='"*://*:*/analytics-service"'/>
+
+
+    <webContainer extractHostHeaderPort="true" trustHostHeaderPort="true" />
+    <webContainer deferServletLoad="false"/>
+
+</server>

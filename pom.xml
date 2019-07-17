@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ibm.mfp</groupId>
+		<artifactId>mfp-base</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>ibm-mobilefoundation-containers</artifactId>
+	<packaging>pom</packaging>
+	<name>IBM MobileFirst Platform Containers</name>
+	<version>2.0.0-SNAPSHOT</version>
+	
+	<properties>
+		<image.tag>1.1.0</image.tag>
+		<output.directory>${basedir}/target</output.directory>
+		<output.dependency.directory>${output.directory}/mfpf-libs</output.dependency.directory>
+		<patchlevel>0</patchlevel>
+
+		<db2.driver.filename>db2jcc4.jar</db2.driver.filename>
+		<db2.driver.version>4.22.29</db2.driver.version>
+		<antdeployer.jar.filename>mfp-ant-deployer.jar</antdeployer.jar.filename>
+
+		<mfp.buildtools.version>Main-SNAPSHOT</mfp.buildtools.version>
+
+		<publish.pattern>target/*.zip</publish.pattern>
+		<allow.publish.snapshot>true</allow.publish.snapshot>
+		
+		<mfp.wlp.repository>${mfp.wlp.name}</mfp.wlp.repository>
+		<mfp.server.repository>${env.REPO_URL}/${mfp.server.name}</mfp.server.repository>
+		
+		<mfp.wlp.name>wlp-mfp-base</mfp.wlp.name>
+		<mfp.server.name>mfpf-server</mfp.server.name>
+		
+		
+
+		<dockerfile.pullNewerImage>false</dockerfile.pullNewerImage>
+		<skipDockerManifestOps>false</skipDockerManifestOps>
+	</properties>
+	
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>com.ibm.plugin</groupId>
+					<artifactId>imp-maven-license-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>ibmconfidential-copyright-check</id>
+							<goals>
+								<goal>check</goal>
+							</goals>
+							<configuration>
+								<excludes combine.children="append">
+									<exclude>**/*.xml</exclude>
+									<exclude>**/*.options</exclude>
+									<exclude>**/*.mf</exclude>
+									<exclude>**/*Dockerfile</exclude>
+									<exclude>**/*.war</exclude>
+									<exclude>**/*.sh</exclude>
+									<exclude>**/.jazzignore</exclude>
+									<exclude>**/*.txt</exclude>
+									<exclude>**/*.adapter</exclude>
+									<exclude>**/*.wlapp</exclude>
+									<exclude>**/*.conf</exclude>
+									<exclude>**/*.env</exclude>
+									<exclude>**/*</exclude>
+									<exclude>**/test/**</exclude>
+									<exclude>**/*.json</exclude>
+									<exclude>**/*.zip</exclude>
+								</excludes>
+							</configuration>
+						</execution>
+						<execution>
+							<id>licensedmaterials-copyright-check</id>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>clean dangling images</id>
+							<phase>clean</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<exec executable="docker" failonerror="true">
+										<arg value="image"/>
+										<arg value="prune"/>
+										<arg value="-f"/>
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.spotify</groupId>
+					<artifactId>dockerfile-maven-plugin</artifactId>
+					<version>1.4.10</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<profiles>
+		<profile>
+			<id>prod</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>ibm-mobilefoundation-ce</module>
+				<module>ibm-appcenter-ce</module>
+				<module>ibm-analytics-ce</module>
+				<module>ibm-mf-all-server-ce</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<properties>
+				<dockerfile.push.skip>true</dockerfile.push.skip>
+				<dockerfile.pullNewerImage>false</dockerfile.pullNewerImage>
+				<skipDockerManifestOps>true</skipDockerManifestOps>
+				<mfp.server.repository>${mfp.server.name}</mfp.server.repository>
+			</properties>
+			<modules>
+				<module>ibm-mobilefoundation-ce</module>
+				<module>ibm-appcenter-ce</module>
+				<module>ibm-analytics-ce</module>
+				<module>ibm-mf-all-server-ce</module>
+			</modules>
+		</profile>
+	</profiles>
+</project>

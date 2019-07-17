@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <exec failonerror="true" executable="docker">
+    <arg value="image"/>
+    <arg value="prune"/>
+    <arg value="-f"/>
+  </exec>
+</target>
+</project>

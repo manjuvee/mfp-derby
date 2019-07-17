@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.ibm.mfp</groupId>
+		<artifactId>ibm-mobilefoundation-containers</artifactId>
+		<version>2.0.0-SNAPSHOT</version>
+		<relativePath>pom.xml</relativePath>
+	</parent>
+
+	<artifactId>ibm-mobilefoundation-containers-parent</artifactId>
+	<packaging>pom</packaging>
+	<name>IBM MobileFirst Platform Containers Parent</name>
+	
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>copy image artifacts</id>
+							<phase>generate-resources</phase>
+							<goals>
+								<goal>copy-resources</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${output.directory}</outputDirectory>
+								<resources>
+									<resource>
+										<directory>${basedir}</directory>
+										<excludes>
+											<exclude>pom.xml</exclude>
+											<exclude>target</exclude>
+											<exclude>.classpath</exclude>
+											<exclude>.project</exclude>
+											<exclude>.gitignore</exclude>
+											<exclude>.settings</exclude>
+										</excludes>
+									</resource>
+								</resources>
+							</configuration>
+						</execution>
+						<execution>
+							<!-- Copy source/licenses to target/licenses-prod -->
+							<id>copy license files</id>
+							<phase>generate-resources</phase>
+							<goals>
+								<goal>copy-resources</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${output.directory}</outputDirectory>
+								<resources>
+									<resource>
+										<directory>${project.parent.basedir}/shared-resources</directory>
+									</resource>
+								</resources>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>create docker manifest</id>
+							<phase>install</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<exec executable="docker" failonerror="true">
+										<arg value="manifest"/>
+										<arg value="create"/>
+										<arg value="${mfp.component.repository}:${image.tag}"/>
+										<arg value="${mfp.component.repository}:${image.tag}-amd64"/>
+										<arg value="--amend"/>
+										<arg value="--insecure"/>
+									</exec>
+									<exec executable="docker" failonerror="true">
+										<arg value="manifest"/>
+										<arg value="annotate"/>
+										<arg value="${mfp.component.repository}:${image.tag}"/>
+										<arg value="${mfp.component.repository}:${image.tag}-amd64"/>
+										<arg value="--os"/>
+										<arg value="linux"/>
+										<arg value="--arch"/>
+										<arg value="amd64"/>
+									</exec>
+									<exec executable="docker" failonerror="true">
+										<arg value="manifest"/>
+										<arg value="inspect"/>
+										<arg value="${mfp.component.repository}:${image.tag}"/>
+										<arg value="--insecure"/>
+									</exec>
+									<exec executable="docker" failonerror="true">
+										<arg value="manifest"/>
+										<arg value="push"/>
+										<arg value="${mfp.component.repository}:${image.tag}"/>
+										<arg value="--insecure"/>
+									</exec>
+								</target>
+								<skip>${skipDockerManifestOps}</skip>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.spotify</groupId>
+					<artifactId>dockerfile-maven-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>create ${mfp.component.name} base image</id>
+							<phase>package</phase>
+							<goals>
+								<goal>build</goal>
+							</goals>
+							<configuration>
+								<repository>base-${mfp.component.name}</repository>
+								<tag>${image.tag}</tag>
+								<buildArgs>
+									<REPOSITORY_URL>${mfp.wlp.repository}</REPOSITORY_URL>
+									<COMPONENT>${mfp.component.name}</COMPONENT>
+									<VERSION>${image.tag}</VERSION>
+								</buildArgs>
+								<dockerfile>${basedir}/target/Dockerfile-builder</dockerfile>
+								<pullNewerImage>${dockerfile.pullNewerImage}</pullNewerImage>
+							</configuration>
+						</execution>
+						<execution>
+							<id>${mfp.component.name} amd64 image</id>
+							<phase>package</phase>
+							<goals>
+								<goal>build</goal>
+								<goal>tag</goal>
+								<goal>push</goal>
+							</goals>
+							<configuration>
+								<repository>${mfp.component.repository}</repository>
+								<tag>${image.tag}-amd64</tag>
+								<buildArgs>
+									<BASE_IMAGE>amd64</BASE_IMAGE>
+									<COMPONENT>${mfp.component.name}</COMPONENT>
+									<VERSION>${image.tag}</VERSION>
+								</buildArgs>
+								<dockerfile>${basedir}/target/Dockerfile</dockerfile>
+							</configuration>
+						</execution>
+					</executions>
+					<configuration>
+						<contextDirectory>${basedir}/target</contextDirectory>
+						<retryCount>0</retryCount>
+						<googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>
+						<pullNewerImage>false</pullNewerImage>
+						<skipDockerInfo>true</skipDockerInfo>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>prepare artifacts assembly</id>
+							<phase>process-resources</phase>
+							<goals>
+								<goal>single</goal>
+							</goals>
+							<configuration>
+								<descriptor>assembly.xml</descriptor>
+								<finalName>${mfp.component.name}</finalName>
+								<outputDirectory>${output.directory}</outputDirectory>
+								<appendAssemblyId>false</appendAssemblyId>
+								<attach>false</attach>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

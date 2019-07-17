@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="new server">
+
+    <!-- Enable features -->
+    <featureManager>
+        <feature>webProfile-7.0</feature>
+
+        <!-- Begin of features added by IBM MobileFirst installer. -->
+        <!-- The following lines will be removed when the application is uninstalled -->
+        <feature>jdbc-4.1</feature>
+        <feature>servlet-3.1</feature>
+        <feature>appSecurity-2.0</feature>
+        <feature>usr:MFPDecoderFeature-1.0</feature>
+        <!-- End of features added by IBM MobileFirst installer. -->
+
+    </featureManager>
+
+    <!-- To access this server from a remote client add a host attribute to the following element, e.g. host="*" -->
+    <httpEndpoint id="defaultHttpEndpoint" httpPort="${default.http.port}" httpsPort="9443" host="*">
+
+        <!-- Option soReuseAddr added by IBM MobileFirst installer. -->
+        <tcpOptions soReuseAddr="true"/>
+
+    </httpEndpoint>
+
+    <!-- Automatically expand WAR files and EAR files -->
+    <applicationManager autoExpand="true"/>
+
+
+    <basicRegistry>
+        <!--    MobileFirst user.
+        [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+        -->
+        <user name="demo" password="demo"/>
+
+        <!--    MobileFirst user.
+        [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+        -->
+        <user name="appcenteradmin" password="admin"/>
+
+        <!--    IBM Application Center group.
+        [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+        -->
+        <group name="appcentergroup">
+            <!--    IBM Application Center group member.
+            [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+            -->
+            <member name="demo"/>
+
+            <!--    IBM Application Center group member.
+            [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+            -->
+            <member name="appcenteradmin"/>
+
+        </group>
+
+    </basicRegistry>
+
+    <!--    Derby library added by IBM MobileFirst.
+        [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
+        Declare the jar file for Derby with the "embedded" deployment option.
+    -->
+    <library id="DerbyLib">
+        <fileset dir="${shared.resource.dir}" includes="derby.jar"/>
+    </library>
+    <!-- Begin of configuration added by IBM MobileFirst installer. -->
+
+    <!-- Declare the IBM Application Center Console application. -->
+    <application id="appcenterconsole" name="appcenterconsole" location="appcenterconsole.war" type="war">
+        <application-bnd>
+            <security-role name="appcenteradmin">
+                <group name="appcentergroup"/>
+            </security-role>
+        </application-bnd>
+    </application>
+
+    <!-- Declare the IBM Application Center Services application. -->
+    <application id="applicationcenter" name="applicationcenter" location="applicationcenter.war" type="war">
+        <application-bnd>
+            <security-role name="appcenteradmin">
+                <group name="appcentergroup"/>
+            </security-role>
+        </application-bnd>
+        <classloader delegation="parentLast"/>
+    </application>
+
+    <!-- Declare the JNDI properties for the IBM Application Center. -->
+
+    <!-- Declare the IBM Application Center database. -->
+    <dataSource jndiName="jdbc/AppCenterDS" transactional="false">
+        <jdbcDriver libraryRef="DerbyLib"/>
+        <properties.derby.embedded databaseName="${wlp.install.dir}/databases/APPCENTER" user="APPCENTER"/>
+    </dataSource>
+
+    <!-- End of configuration added by IBM MobileFirst installer. -->
+
+</server>
