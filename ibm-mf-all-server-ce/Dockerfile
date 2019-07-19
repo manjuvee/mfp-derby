@@ -33,7 +33,7 @@ COPY licenses/ /opt/ibm/MobileFirst/licenses
 # Copy Precreated databases
 COPY databases/ /opt/ibm/wlp/databases
 USER root
-RUN chown -R 1001:0 /opt/ibm/wlp/databases
+RUN chmod -R 777 /opt/ibm/wlp/databases
 USER 1001
 
 COPY keystore.xml /opt/ibm/wlp/usr/servers/defaultServer/configDropins/overrides

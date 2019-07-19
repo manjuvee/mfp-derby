@@ -41,8 +41,6 @@
         <feature>jdbc-4.1</feature>
         <feature>servlet-3.1</feature>
         <feature>ssl-1.0</feature>
-        <feature>webProfile-7.0</feature>
-        <feature>usr:MFPDecoderFeature-1.0</feature>
         <!-- End of features added by IBM MobileFirst <installmobilefirstruntime> ant task for context root '/mfp'. -->
 
     </featureManager>
@@ -178,13 +176,12 @@
         [Added by IBM MobileFirst Platform Foundation <installAdapterGenerator> Ant task for context root '/mfpadaptergenerator']
         -->
         <user name="admin" password="admin"/>
-        <user name="demo" password="demo"/>
         <user name="appcenteradmin" password="admin"/>
         <group name="appcentergroup">
             <!--    IBM Application Center group member.
                     [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
                     -->
-            <member name="demo"/>
+            <member name="admin"/>
 
             <!--    IBM Application Center group member.
                     [Added by IBM MobileFirst Platform Foundation <installapplicationcenter> Ant task for context root '/applicationcenter'] 
